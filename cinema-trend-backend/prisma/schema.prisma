@@ -1,0 +1,88 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  username       String?
+  password       String
+  role           Role            @default(USER)
+  picture        String?
+  date           DateTime?
+  gender         Gender?
+  watchedMovies  WatchedMovie[]  @relation("UserWatchedMovies")
+  favoriteMovies FavoriteMovie[] @relation("UserFavoriteMovies")
+  reviews        Review[]        @relation("UserReviews")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Movie {
+  id          Int             @id @default(autoincrement())
+  title       String
+  picture     String
+  description String?
+  releaseDate DateTime
+  categories  MovieCategory[] @relation("MovieCategories")
+  reviews     Review[]        @relation("MovieReviews")
+  watchedBy   WatchedMovie[]  @relation("MovieWatchedBy")
+  favoritedBy FavoriteMovie[] @relation("MovieFavoritedBy")
+  rating      Int?
+  duration    Int?
+  country     String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model MovieCategory {
+  id     Int     @id @default(autoincrement())
+  name   String
+  movies Movie[] @relation("MovieCategories")
+}
+
+model WatchedMovie {
+  id        Int      @id @default(autoincrement())
+  movieId   Int
+  user      User     @relation("UserWatchedMovies", fields: [userId], references: [id])
+  userId    Int
+  movie     Movie    @relation("MovieWatchedBy", fields: [movieId], references: [id])
+  watchedAt DateTime @default(now())
+}
+
+model FavoriteMovie {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  movieId     Int
+  user        User     @relation("UserFavoriteMovies", fields: [userId], references: [id])
+  movie       Movie    @relation("MovieFavoritedBy", fields: [movieId], references: [id])
+  favoritedAt DateTime @default(now())
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  content   String
+  rating    Int      @default(0)
+  userId    Int
+  movieId   Int
+  user      User     @relation("UserReviews", fields: [userId], references: [id])
+  movie     Movie    @relation("MovieReviews", fields: [movieId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Role {
+  USER
+  MODERATOR
+}
